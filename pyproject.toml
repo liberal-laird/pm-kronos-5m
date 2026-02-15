@@ -21,4 +21,9 @@ dependencies = [
     "tqdm>=4.67.0",
     "py-clob-client",
     "python-dotenv>=1.0.0",
+    "py-builder-relayer-client",
+    "py-builder-signing-sdk",
+    "eth-utils",
+    "web3>=6.0.0",
+    "eth-account>=0.13.0",
 ]

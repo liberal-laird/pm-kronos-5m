@@ -70,7 +70,8 @@ python main.py --amount 5              # 下单 5 USD
 - `TRADE_ENABLED`：`1` 时根据预测在 Polymarket 下单，否则仅模拟
 - `PRIVATE_KEY`：钱包私钥（Polymarket 导出：reveal.magic.link/polymarket）
 - `POLYMARKET_PROXY`：Polymarket 充币地址（Profile 页可查）
-- `SIGNATURE_TYPE`：签名类型，`2` 为浏览器钱包（MetaMask 等）
+- `SIGNATURE_TYPE`：下单签名类型，`2` 为浏览器钱包（MetaMask 等）
+- `CLAIM_SIGNATURE_TYPE`：Claim 签名类型，`1`=pre-validated（默认，推荐），`2`=ECDSA
 - `HF_TOKEN`：Hugging Face API Token（可选，可提升模型下载速率与限流阈值，见 https://huggingface.co/settings/tokens）
 
 ### Polymarket 下单说明
@@ -82,6 +83,21 @@ python main.py --amount 5              # 下单 5 USD
 3. 使用 FOK 市价单，金额由 `--amount` 指定（默认 1 USD）
 
 部分市场的 `orderMinSize` 为 5，若 1 USD 被拒，可尝试 `--amount 5`。
+
+### 自动 Claim
+
+市场结算后，可兑换仓位需手动 claim。运行：
+
+```bash
+python claim_positions.py
+```
+
+会获取 `POLYMARKET_PROXY` 下所有可 redeem 仓位，并按 condition 逐个执行 claim。
+
+**两种方式**：
+
+1. **MetaMask / Safe 直接执行**（默认）：无需 Builder 凭证，需配置 `PRIVATE_KEY`、`POLYMARKET_PROXY`，以及可选 `RPC_URL`（默认 `https://polygon-rpc.com`）、`CLAIM_SIGNATURE_TYPE=1`（pre-validated）。私钥对应的 EOA 需为 Safe 的 owner，claim 时支付 Polygon gas。
+2. **Relayer 免 gas**：配置 `POLY_BUILDER_API_KEY`、`POLY_BUILDER_SECRET`、`POLY_BUILDER_PASSPHRASE` 后自动改用 Relayer（申请：https://polymarket.com/builder）。
 
 ## 流程说明
 

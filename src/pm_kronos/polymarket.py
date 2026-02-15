@@ -118,7 +118,7 @@ def place_15m_order(
     signature_type: int = 2,
 ) -> dict[str, Any]:
     """
-    在 Polymarket 上下 15M 市价单（FOK）。
+    在 Polymarket 上下 15M 市价单（FAK：能成交多少算多少，未成交部分取消）。
 
     Args:
         token_id: Up 或 Down 的 token ID
@@ -150,7 +150,7 @@ def place_15m_order(
         token_id=token_id,
         amount=amount_usd,
         side=BUY,
-        order_type=OrderType.FOK,
+        order_type=OrderType.FAK,
     )
     signed = client.create_market_order(order_args)
-    return client.post_order(signed, OrderType.FOK)
+    return client.post_order(signed, OrderType.FAK)
