@@ -45,8 +45,8 @@ def main() -> None:
     parser.add_argument(
         "--amount",
         type=float,
-        default=1.0,
-        help="Polymarket 下单金额 USD（默认 1）",
+        default=float(os.environ.get("TRADE_AMOUNT", "1")),
+        help="Polymarket 下单金额 USD（可用 TRADE_AMOUNT 环境变量设置默认值）",
     )
     parser.add_argument(
         "--no-trade",

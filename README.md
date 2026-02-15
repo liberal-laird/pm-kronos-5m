@@ -72,6 +72,7 @@ uv run main.py --amount 5              # 下单 5 USD
 |------|------|
 | `PM_KRONOS_SYMBOL` | 默认交易对（可替代 `--symbol`） |
 | `TRADE_ENABLED` | `1` 时根据预测在 Polymarket 下单，否则仅模拟 |
+| `TRADE_AMOUNT` | 默认下单金额（USD），可被 `--amount` 覆盖 |
 | `PRIVATE_KEY` | 钱包私钥（Polymarket 导出：reveal.magic.link/polymarket） |
 | `POLYMARKET_PROXY` | Polymarket 充币地址（Profile 页可查） |
 | `SIGNATURE_TYPE` | 下单签名类型，`2` 为浏览器钱包（MetaMask 等） |
