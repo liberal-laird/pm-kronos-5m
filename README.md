@@ -22,7 +22,8 @@ git submodule update --init --recursive
 ### 2. 安装依赖
 
 ```bash
-pip install -e .
+uv sync
+# 或 pip install -e .
 pip install -r lib/kronos/requirements.txt
 ```
 
@@ -31,7 +32,8 @@ pip install -r lib/kronos/requirements.txt
 ### 单次运行
 
 ```bash
-python main.py
+uv run main.py
+# 或 python main.py
 ```
 
 默认预测 **BTCUSDT** 下一根 15m K 线的涨跌。
@@ -41,10 +43,10 @@ python main.py
 在每小时的 **0、15、30、45 分钟（UTC）** 自动执行一次：
 
 ```bash
-python run_cron.py
+uv run run_cron.py
 ```
 
-可附带 `main.py` 的参数，如 `python run_cron.py --amount 5`。
+可附带 `main.py` 的参数，如 `uv run run_cron.py --amount 5`。
 
 ### 参数
 
@@ -59,20 +61,23 @@ python run_cron.py
 示例：
 
 ```bash
-python main.py --symbol ETHUSDT
-python main.py --no-trade              # 只预测，不下单
-python main.py --amount 5              # 下单 5 USD
+uv run main.py --symbol ETHUSDT
+uv run main.py --no-trade              # 只预测，不下单
+uv run main.py --amount 5              # 下单 5 USD
 ```
 
 ### 环境变量
 
-- `PM_KRONOS_SYMBOL`：默认交易对（可替代 `--symbol`）
-- `TRADE_ENABLED`：`1` 时根据预测在 Polymarket 下单，否则仅模拟
-- `PRIVATE_KEY`：钱包私钥（Polymarket 导出：reveal.magic.link/polymarket）
-- `POLYMARKET_PROXY`：Polymarket 充币地址（Profile 页可查）
-- `SIGNATURE_TYPE`：下单签名类型，`2` 为浏览器钱包（MetaMask 等）
-- `CLAIM_SIGNATURE_TYPE`：Claim 签名类型，`1`=pre-validated（默认，推荐），`2`=ECDSA
-- `HF_TOKEN`：Hugging Face API Token（可选，可提升模型下载速率与限流阈值，见 https://huggingface.co/settings/tokens）
+| 变量 | 说明 |
+|------|------|
+| `PM_KRONOS_SYMBOL` | 默认交易对（可替代 `--symbol`） |
+| `TRADE_ENABLED` | `1` 时根据预测在 Polymarket 下单，否则仅模拟 |
+| `PRIVATE_KEY` | 钱包私钥（Polymarket 导出：reveal.magic.link/polymarket） |
+| `POLYMARKET_PROXY` | Polymarket 充币地址（Profile 页可查） |
+| `SIGNATURE_TYPE` | 下单签名类型，`2` 为浏览器钱包（MetaMask 等） |
+| `CLAIM_SIGNATURE_TYPE` | Claim 签名类型，`1`=pre-validated（默认，推荐），`2`=ECDSA |
+| `RPC_URL` | Polygon RPC（claim 用，默认 `https://polygon-rpc.com`） |
+| `HF_TOKEN` | Hugging Face API Token（可选，提升模型下载速率） |
 
 ### Polymarket 下单说明
 
@@ -80,24 +85,28 @@ python main.py --amount 5              # 下单 5 USD
 
 1. 获取与下一 15 分钟时间窗口对应的 Polymarket BTC Up/Down 市场
 2. 涨 → 买 UP token，跌 → 买 DOWN token
-3. 使用 FOK 市价单，金额由 `--amount` 指定（默认 1 USD）
+3. 使用 **FAK** 市价单（能成交多少算多少，未成交部分取消），金额由 `--amount` 指定（默认 1 USD）
 
-部分市场的 `orderMinSize` 为 5，若 1 USD 被拒，可尝试 `--amount 5`。
+部分市场的 `orderMinSize` 为 5，若流动性不足可尝试 `--amount 5`。
 
 ### 自动 Claim
 
-市场结算后，可兑换仓位需手动 claim。运行：
+市场结算后，可兑换仓位需 claim。Claim 服务单独运行，不启动价格监控和交易：
 
 ```bash
-python claim_positions.py
+uv run claim_positions.py           # 持续轮询（默认每 60 秒），Ctrl+C 退出
+uv run claim_positions.py --once    # 单次执行后退出
+uv run claim_positions.py --poll 120 # 自定义轮询间隔（秒）
 ```
 
 会获取 `POLYMARKET_PROXY` 下所有可 redeem 仓位，并按 condition 逐个执行 claim。
 
 **两种方式**：
 
-1. **MetaMask / Safe 直接执行**（默认）：无需 Builder 凭证，需配置 `PRIVATE_KEY`、`POLYMARKET_PROXY`，以及可选 `RPC_URL`（默认 `https://polygon-rpc.com`）、`CLAIM_SIGNATURE_TYPE=1`（pre-validated）。私钥对应的 EOA 需为 Safe 的 owner，claim 时支付 Polygon gas。
+1. **MetaMask / Safe 直接执行**（默认）：无需 Builder 凭证，需配置 `PRIVATE_KEY`、`POLYMARKET_PROXY`，可选 `RPC_URL`、`CLAIM_SIGNATURE_TYPE=1`。私钥对应的 EOA 需为 Safe 的 owner，claim 时支付 Polygon gas。建议使用付费 RPC（如 Alchemy）以避免限流。
 2. **Relayer 免 gas**：配置 `POLY_BUILDER_API_KEY`、`POLY_BUILDER_SECRET`、`POLY_BUILDER_PASSPHRASE` 后自动改用 Relayer（申请：https://polymarket.com/builder）。
+
+**Claim 环境变量**：`USE_PROXY_WALLET` 为 `0` 时使用 EOA 直接执行（仓位需在 EOA）；默认 `1` 使用 Proxy/Safe。
 
 ## 流程说明
 
