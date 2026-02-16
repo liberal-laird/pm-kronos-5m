@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""在每小时的 0、15、30、45 分钟（UTC）运行一次 main.py"""
+"""在每小时的 0、5、10、15、20、25、30、35、40、45、50、55 分钟（UTC）运行一次 main.py"""
 
 import subprocess
 import sys
@@ -7,15 +7,12 @@ import time
 from pathlib import Path
 
 
-def next_quarter_utc() -> float:
-    """下一档 0/15/30/45 分钟（UTC）的 Unix 时间戳，留 5 秒缓冲避免重复执行。"""
+def next_five_min_utc() -> float:
+    """下一档 0/5/10/15/20/25/30/35/40/45/50/55 分钟（UTC）的 Unix 时间戳，留 5 秒缓冲避免重复执行。"""
     now = time.time()
-    # 当前 UTC 分钟
     secs = int(now)
-    remainder = secs % 900  # 900 = 15 * 60
-    # 下一档开始时间
-    next_sec = secs - remainder + 900
-    # 若已在档内前 5 秒，用当前档；否则用下一档
+    remainder = secs % 300  # 300 = 5 * 60 秒
+    next_sec = secs - remainder + 300
     if remainder < 5:
         next_sec = secs - remainder
     return float(next_sec)
@@ -26,7 +23,7 @@ def main() -> None:
     main_py = project_root / "main.py"
 
     while True:
-        target = next_quarter_utc()
+        target = next_five_min_utc()
         wait_sec = max(0, target - time.time())
         if wait_sec > 0:
             next_ts = time.strftime("%H:%M:%S UTC", time.gmtime(target))

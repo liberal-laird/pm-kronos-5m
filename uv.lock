@@ -1369,7 +1369,7 @@ wheels = [
 ]
 
 [[package]]
-name = "pm-kronos"
+name = "btc-updown-5m"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

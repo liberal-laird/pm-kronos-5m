@@ -1,6 +1,6 @@
-# pm-kronos
+# btc-updown-5m
 
-加密 15 分钟涨跌预测：从币安获取 96 根 15m K 线，使用 [Kronos](https://github.com/shiyu-coder/Kronos) 模型预测下一根 K 线的涨跌方向，并可按预测在 [Polymarket](https://polymarket.com/crypto/15M) 对应的 15M Up/Down 市场下单（涨买 UP，跌买 DOWN）。
+加密 5 分钟涨跌预测：从币安获取 48 根 5m K 线，使用 [Kronos](https://github.com/shiyu-coder/Kronos) 模型预测下一根 K 线的涨跌方向，并可按预测在 [Polymarket](https://polymarket.com/crypto/5M) 对应的 5M Up/Down 市场下单（涨买 UP，跌买 DOWN）。
 
 ## 安装
 
@@ -36,11 +36,11 @@ uv run main.py
 # 或 python main.py
 ```
 
-默认预测 **BTCUSDT** 下一根 15m K 线的涨跌。
+默认预测 **BTCUSDT** 下一根 5m K 线的涨跌。
 
-### 定时运行（每 15 分钟整点）
+### 定时运行（每 5 分钟整点）
 
-在每小时的 **0、15、30、45 分钟（UTC）** 自动执行一次：
+在每小时的 **0、5、10、15、20、25、30、35、40、45、50、55 分钟（UTC）** 自动执行一次：
 
 ```bash
 uv run run_cron.py
@@ -53,9 +53,9 @@ uv run run_cron.py
 | 参数 | 默认值 | 说明 |
 |------|--------|------|
 | `--symbol` | `BTCUSDT` | 交易对 |
-| `--limit` | `96` | K 线根数 |
+| `--limit` | `48` | K 线根数 |
 | `--seed` | `42` | 随机种子（可复现预测） |
-| `--amount` | `1` | Polymarket 下单金额（USD） |
+| `--amount` | 见 `TRADE_AMOUNT` | Polymarket 下单金额（USD），不传则按 `TRADE_AMOUNT`（auto=余额 10%） |
 | `--no-trade` | - | 仅模拟，不实际下单 |
 
 示例：
@@ -72,7 +72,7 @@ uv run main.py --amount 5              # 下单 5 USD
 |------|------|
 | `PM_KRONOS_SYMBOL` | 默认交易对（可替代 `--symbol`） |
 | `TRADE_ENABLED` | `1` 时根据预测在 Polymarket 下单，否则仅模拟 |
-| `TRADE_AMOUNT` | 默认下单金额（USD），可被 `--amount` 覆盖 |
+| `TRADE_AMOUNT` | 下单金额：`auto`=账户 USDC 余额的 10%，或填数字如 `5`（USD），可被 `--amount` 覆盖 |
 | `PRIVATE_KEY` | 钱包私钥（Polymarket 导出：reveal.magic.link/polymarket） |
 | `POLYMARKET_PROXY` | Polymarket 充币地址（Profile 页可查） |
 | `SIGNATURE_TYPE` | 下单签名类型，`2` 为浏览器钱包（MetaMask 等） |
@@ -84,11 +84,11 @@ uv run main.py --amount 5              # 下单 5 USD
 
 当 `TRADE_ENABLED=1` 且未使用 `--no-trade` 时，预测完成后会：
 
-1. 获取与下一 15 分钟时间窗口对应的 Polymarket BTC Up/Down 市场
+1. 获取与下一 5 分钟时间窗口对应的 Polymarket BTC Up/Down 市场
 2. 涨 → 买 UP token，跌 → 买 DOWN token
 3. 使用 **FAK** 市价单（能成交多少算多少，未成交部分取消），金额由 `--amount` 指定（默认 1 USD）
 
-部分市场的 `orderMinSize` 为 5，若流动性不足可尝试 `--amount 5`。
+部分 5M 市场的 `orderMinSize` 为 5，若流动性不足可尝试 `--amount 5`。
 
 ### 自动 Claim
 
@@ -111,8 +111,8 @@ uv run claim_positions.py --poll 120 # 自定义轮询间隔（秒）
 
 ## 流程说明
 
-1. 从币安公开 API 获取 96 根 15m K 线
+1. 从币安公开 API 获取 48 根 5m K 线
 2. 转换为 Kronos 所需的 DataFrame 格式（OHLCV + timestamps）
-3. 加载 Kronos-small 模型，预测下一根 K 线的 OHLC
+3. 加载 Kronos-base 模型，预测下一根 K 线的 OHLC
 4. 根据预测收盘价与当前收盘价比较，输出「涨」或「跌」
 5. 若开启交易，在 Polymarket 对应市场下单（涨买 UP，跌买 DOWN）

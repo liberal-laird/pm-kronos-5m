@@ -1,4 +1,4 @@
-"""Kronos 模型预测 15m 涨跌"""
+"""Kronos 模型预测 5m 涨跌"""
 
 import os
 import random
@@ -36,8 +36,8 @@ def predict_direction(
     使用 Kronos 预测下一根 K 线的涨跌方向。
 
     Args:
-        df: 含 open, high, low, close, volume 列的 DataFrame（96 行）
-        x_timestamp: 历史时间序列（96 个）
+        df: 含 open, high, low, close, volume 列的 DataFrame（如 48 行）
+        x_timestamp: 历史时间序列（如 48 个）
         y_timestamp: 待预测的下一根 K 线时间戳（1 个）
         device: 计算设备，None 表示自动选择 (cuda/mps/cpu)
         seed: 随机种子，固定后可使预测结果可复现
@@ -67,7 +67,7 @@ def predict_direction(
 
     # 加载模型与分词器
     tokenizer = KronosTokenizer.from_pretrained("NeoQuasar/Kronos-Tokenizer-base")
-    model = Kronos.from_pretrained("NeoQuasar/Kronos-small")
+    model = Kronos.from_pretrained("NeoQuasar/Kronos-base")
 
     predictor = KronosPredictor(
         model=model,

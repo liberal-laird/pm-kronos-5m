@@ -1,6 +1,7 @@
-"""Polymarket 15M 市场获取与下单"""
+"""Polymarket 5M 市场获取与下单"""
 
 import json
+import os
 import time
 from typing import Any
 
@@ -8,6 +9,8 @@ import httpx
 
 GAMMA_EVENTS_URL = "https://gamma-api.polymarket.com/events"
 DATA_POSITIONS_URL = "https://data-api.polymarket.com/positions"
+USDC_POLYGON = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"
+USDC_DECIMALS = 6
 
 
 def _fetch_market_by_slug(slug: str) -> dict | None:
@@ -29,25 +32,25 @@ def _fetch_market_by_slug(slug: str) -> dict | None:
     return data[0]
 
 
-def get_btc_15m_market(next_open_ts=None) -> dict[str, str] | None:
+def get_btc_5m_market(next_open_ts=None) -> dict[str, str] | None:
     """
-    获取当前活动的 Polymarket BTC 15M Up/Down 市场信息。
+    获取当前活动的 Polymarket BTC 5M Up/Down 市场信息。
 
-    使用下一根 15m 开盘时间或当前时间向下对齐到 15 分钟边界，
+    使用下一根 5m 开盘时间或当前时间向下对齐到 5 分钟边界，
     通过 /events?slug= 查询活动市场。
 
     Args:
-        next_open_ts: 可选，下一根 15m K 线的开盘时间；未传则用当前时间对齐
+        next_open_ts: 可选，下一根 5m K 线的开盘时间；未传则用当前时间对齐
 
     Returns:
         {"up_token_id": "...", "down_token_id": "...", "event_id": "..."} 或 None
     """
-    ts_now = int(time.time() // 900 * 900)
-    slugs_to_try = [f"btc-updown-15m-{ts_now}"]
+    ts_now = int(time.time() // 300 * 300)  # 300 = 5 * 60 秒
+    slugs_to_try = [f"btc-updown-5m-{ts_now}"]
     if next_open_ts is not None:
         ts_next = int(next_open_ts.timestamp())
         if ts_next != ts_now:
-            slugs_to_try.insert(0, f"btc-updown-15m-{ts_next}")
+            slugs_to_try.insert(0, f"btc-updown-5m-{ts_next}")
 
     for slug in slugs_to_try:
         event = _fetch_market_by_slug(slug)
@@ -82,6 +85,35 @@ def get_btc_15m_market(next_open_ts=None) -> dict[str, str] | None:
     return None
 
 
+def get_usdc_balance(proxy: str, rpc_url: str | None = None) -> float:
+    """
+    获取 Polymarket 充币地址（proxy）在 Polygon 上的 USDC 余额。
+
+    Args:
+        proxy: 充币地址（proxy 或 EOA）
+        rpc_url: Polygon RPC URL，默认使用 RPC_URL 环境变量或 polygon-rpc.com
+
+    Returns:
+        余额（USD），失败返回 0.0
+    """
+    from web3 import Web3
+
+    url = rpc_url or os.environ.get("RPC_URL", "https://polygon-rpc.com").strip()
+    try:
+        w3 = Web3(Web3.HTTPProvider(url, request_kwargs={"timeout": 15}))
+        if not w3.is_connected():
+            return 0.0
+        # ERC20 balanceOf
+        usdc = w3.eth.contract(
+            address=w3.to_checksum_address(USDC_POLYGON),
+            abi=[{"inputs": [{"name": "account", "type": "address"}], "name": "balanceOf", "outputs": [{"type": "uint256"}], "stateMutability": "view", "type": "function"}],
+        )
+        raw = usdc.functions.balanceOf(w3.to_checksum_address(proxy)).call()
+        return float(raw) / (10**USDC_DECIMALS)
+    except Exception:
+        return 0.0
+
+
 def has_position_in_event(proxy: str, event_id: str) -> bool:
     """
     检查用户在该事件是否已有仓位。
@@ -109,7 +141,7 @@ def has_position_in_event(proxy: str, event_id: str) -> bool:
         return False
 
 
-def place_15m_order(
+def place_5m_order(
     token_id: str,
     amount_usd: float,
     *,
@@ -118,7 +150,7 @@ def place_15m_order(
     signature_type: int = 2,
 ) -> dict[str, Any]:
     """
-    在 Polymarket 上下 15M 市价单（FAK：能成交多少算多少，未成交部分取消）。
+    在 Polymarket 上下 5M 市价单（FAK：能成交多少算多少，未成交部分取消）。
 
     Args:
         token_id: Up 或 Down 的 token ID

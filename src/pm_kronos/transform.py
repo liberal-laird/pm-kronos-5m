@@ -11,8 +11,8 @@ CLOSE_IDX = 4
 VOLUME_IDX = 5
 CLOSE_TIME_IDX = 6
 
-# 15 分钟 = 15 * 60 * 1000 毫秒
-MS_PER_15M = 15 * 60 * 1000
+# 5 分钟 = 5 * 60 * 1000 毫秒
+MS_PER_5M = 5 * 60 * 1000
 
 
 def binance_klines_to_kronos_df(klines: list) -> tuple[pd.DataFrame, pd.Series]:
@@ -57,7 +57,7 @@ def get_next_candle_timestamp(last_close_time_ms: int) -> pd.Timestamp:
         last_close_time_ms: 最后一根 K 线的 Close time (毫秒)
 
     Returns:
-        下一根 15m K 线的开盘时间 (UTC)
+        下一根 5m K 线的开盘时间 (UTC)
     """
     # 下一根 K 线开盘 = 上一根收盘 + 1ms（Binance 约定）
     next_open_ms = last_close_time_ms + 1

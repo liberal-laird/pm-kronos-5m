@@ -6,9 +6,9 @@ build-backend = "hatchling.build"
 packages = ["src/pm_kronos"]
 
 [project]
-name = "pm-kronos"
+name = "btc-updown-5m"
 version = "0.1.0"
-description = "加密 15m 涨跌预测：币安 K 线 + Kronos 模型"
+description = "加密 5m 涨跌预测：币安 K 线 + Kronos 模型"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

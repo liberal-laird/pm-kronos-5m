@@ -7,16 +7,16 @@ BINANCE_KLINES_URL = "https://api.binance.com/api/v3/klines"
 
 def fetch_klines(
     symbol: str = "BTCUSDT",
-    interval: str = "15m",
-    limit: int = 96,
+    interval: str = "5m",
+    limit: int = 48,
 ) -> list:
     """
     从币安获取 K 线数据。
 
     Args:
         symbol: 交易对，如 BTCUSDT
-        interval: K 线周期，如 15m
-        limit: 获取的 K 线根数，默认 96
+        interval: K 线周期，如 5m
+        limit: 获取的 K 线根数，默认 48
 
     Returns:
         原始 K 线数组列表，每根格式为 [Open time, Open, High, Low, Close, Volume, ...]
